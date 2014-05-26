@@ -1,0 +1,92 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# Copyright (c) 2014 Andrew Fresh <andrew@afresh1.com>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use OpenBSD::PackageModule::Fetch::CPAN;
+use OpenBSD::PackageModule::Fetch::NPM;
+use OpenBSD::PackageModule::MakePort;
+
+use Cwd qw( getcwd );
+
+my @dists = @ARGV;
+my %seen;
+while (@dists) {
+    my $dist = shift @dists;
+    next if $seen{$dist}++;
+    warn "Porting $dist\n";
+
+    my $f;
+    if ( $dist =~ s/^p5-// or $dist =~ /::/ ) {
+        $f = OpenBSD::PackageModule::Fetch::CPAN->new;
+    }
+    elsif ( $dist =~ s/^node-// ) {
+        $f = OpenBSD::PackageModule::Fetch::NPM->new;
+    }
+    else {
+        die "Unknown package type: $dist\n";
+    }
+
+    my $di = eval { $f->fetch($dist) };
+    unless ($di) {
+        warn "Unable to find $dist: $@\n";
+        next;
+    }
+
+    next if dist_is_up_to_date($di);
+
+    my $mp = OpenBSD::PackageModule::MakePort->new();    # TODO: new($di);
+    $mp->make_port($di);
+
+    foreach my $key ( keys %{ $di->{makefile} } ) {
+        next unless $key =~ /_DEPENDS$/;
+        push @dists, map { s{.*/}{}; $_ }
+            map { $_->{port} } values %{ $di->{makefile}->{$key} };
+    }
+}
+
+sub dist_is_up_to_date {
+    my ($di) = @_;
+    my $current_distname = port_value( $di, 'DISTNAME' );
+    return $current_distname eq $di->{distname};
+}
+
+sub port_value {
+    my ( $di, $variable ) = @_;
+    my $value = _make_in_port( $di, "show=$variable" );
+    chomp $value;
+    return $value;
+}
+
+sub _make_in_port {
+    my ( $di, @args ) = @_;
+
+    my $old_cwd = getcwd();
+    my $port    = $di->{port} || die "Dist Info has no port";
+    my $dir     = "/usr/ports/$port";
+    return '' unless -e $dir;
+
+    chdir $dir or die "Couldn't chdir $dir: $!";
+
+    open my $fh, '-|', 'make', @args or die "Couldn't launch make";
+    my $output = do { local $/ = undef; <$fh> };
+    close $fh;
+
+    chdir $old_cwd or die "Couldn't chdir $old_cwd: $!";
+
+    return $output;
+}
+
