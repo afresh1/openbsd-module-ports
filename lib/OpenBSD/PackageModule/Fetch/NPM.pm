@@ -42,11 +42,9 @@ sub descr_for_dist {
 
 sub format_dist {
     my ( $self, $di ) = @_;
-    #return $di;
 
     my $port = $self->port_for_dist($di);
     my ($category) = split m{/}x, $port;
-    $category = 'nodejs' if $category eq 'NPM';
 
     my $latest = $di->{versions}->{ $di->{'dist-tags'}->{'latest'} };
 
@@ -65,24 +63,23 @@ sub format_dist {
 
     my %formatted = (
         makefile => {
-            COMMENT     => $comment,
-            NPM_VERSION => $latest->{version},
-            NPM_NAME    => $latest->{name},
-            MODULES     => 'lang/node',
-            CATEGORIES  => $category,
+            COMMENT         => $comment,
+            NPM_VERSION     => $latest->{version},
+            NPM_NAME        => $latest->{name},
+            MODULES         => 'lang/node',
+            CONFIGURE_STYLE => 'npm',
+            CATEGORIES      => $category,
 
             HOMEPAGE => $di->{homepage},
 
             PERMIT_PACKAGE_CDROM => 'Yes',    # TODO: decide based on license
 
             $self->_format_depends($latest),
-        },
+            },
 
         distname => $latest->{name} . '-' . $latest->{version},
         license => $license,
         descr   => $self->descr_for_dist($di),
-
-        #CONFIGURE_STYLE=>modbuild
 
         port => $port,
     );
