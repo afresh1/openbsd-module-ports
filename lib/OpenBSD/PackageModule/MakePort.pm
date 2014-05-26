@@ -46,8 +46,7 @@ sub make_port {
 
     $self->make_makefile($di);
 
-    $self->make_descr($di)
-        if $dir =~ m{/CPAN/}x;    # Only works most of the time
+    $self->make_descr($di) unless -e 'pkg/DESCR';
 
     chdir $old_cwd or croak "Couldn't chdir $old_cwd: $!";
 }
