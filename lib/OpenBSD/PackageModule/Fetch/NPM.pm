@@ -112,10 +112,60 @@ sub _format_depends {
             foreach my $dist ( sort keys %r ) {
                 my $port = $self->port_for_dist($dist);
 
+                # Node's semver is rather annoying.
+                # https://www.npmjs.org/doc/misc/semver.html
+
                 my $version = $r{$dist};
-                $version = '' if $version =~ m{://}; # sometimes URLs?
-                $version =~ s/^[~^]/>=/; # because we don't support those
-                $version =~ s/^(\d)/=$1/;
+                $version =~ s/[^\d\s]\K\s+//g;
+
+                my @versions;
+                foreach my $v ( split /\s+/, $version ) {
+                    my $version = '';
+
+                    if ( $v =~ m{://} ) {
+                        warn "URL Versions Not Supported!";
+                        next;
+                    }
+
+                    if ($v =~ s/\.?[x\*]$//) {
+                        next unless $v;
+                        $v = "^$v";
+                    }
+
+                    if ( $v =~ s/^([~^])(\d+)\.// ) {
+                        my $type  = $1;
+                        my $major = $2;
+
+                        if ($major) {
+                            $version = ">=$major.$v";
+                            $major++;
+                            $version .= ",<$major.0.0";
+                        }
+                        else {
+                            $v =~ s/^(\d+)\.//;
+                            $major = $1;
+
+                            if ($major) {
+                                $version = ">=0.$major.$v";
+                                $major++;
+                                $version .= ",<0.$major.0";
+                            }
+                            else {
+                                $version = "0.0.$v";
+                            }
+                        }
+                    }
+                    elsif ( $v =~ /^\d/ ) {
+                        $version = "=$v";
+                    }
+                    else {
+                        $version = $v;
+                    }
+
+                    push @versions, $version;
+                }
+
+                $version = join ',', @versions;
 
                 # say ". $port [$dist]";
                 $depends{$type}{$port} = {
