@@ -22,11 +22,10 @@ use OpenBSD::PackageModule::MakePort;
 
 use Cwd qw( getcwd );
 
-my @dists = @ARGV;
-my %seen;
-while (@dists) {
-    my $dist = shift @dists;
-    next if $seen{$dist}++;
+port_it($_) for @ARGV;
+
+sub port_it {
+    my $dist = shift;
     warn "Porting $dist\n";
 
     my $f;
@@ -43,19 +42,26 @@ while (@dists) {
     my $di = eval { $f->fetch($dist) };
     unless ($di) {
         warn "Unable to find $dist: $@\n";
-        next;
+        return;
     }
 
-    next if dist_is_up_to_date($di);
+    return if $f->dist_is_up_to_date($di);
+
+    foreach my $key ( sort keys %{ $di->{makefile} } ) {
+        next unless $key =~ /_DEPENDS$/;
+
+        foreach my $port ( map { $_->{port} }
+            values %{ $di->{makefile}->{$key} } )
+        {
+            next if $port =~ /^\$\{/;
+            $port =~ s{.*/}{};
+
+            port_it($port);
+        }
+    }
 
     my $mp = OpenBSD::PackageModule::MakePort->new();    # TODO: new($di);
     $mp->make_port($di);
-
-    foreach my $key ( keys %{ $di->{makefile} } ) {
-        next unless $key =~ /_DEPENDS$/;
-        push @dists, map { s{.*/}{}; $_ }
-            map { $_->{port} } values %{ $di->{makefile}->{$key} };
-    }
 }
 
 sub dist_is_up_to_date {
