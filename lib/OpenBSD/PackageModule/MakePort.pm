@@ -51,6 +51,8 @@ sub make_port {
 
     $self->make_makesum($di) unless -e 'distinfo';
 
+    $self->make_plist($di) unless -e 'pkg/PLIST';
+
     chdir $old_cwd or croak "Couldn't chdir $old_cwd: $!";
 }
 
@@ -209,6 +211,17 @@ sub make_descr {
 sub make_makesum {
     my ($self, $di) = @_;
     system('make', 'makesum');
+}
+
+sub make_plist {
+    my ($self, $di) = @_;
+
+    make_path('pkg') unless -e 'pkg';
+
+    local $ENV{PORTSDIR_PATH} = $self->base_dir . ':' . port_dir();
+    system('make', 'plist');
+
+    return 1;
 }
 
 1;
