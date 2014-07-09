@@ -49,6 +49,8 @@ sub make_port {
 
     $self->make_descr($di) unless -e 'pkg/DESCR';
 
+    $self->make_makesum($di) unless -e 'distinfo';
+
     chdir $old_cwd or croak "Couldn't chdir $old_cwd: $!";
 }
 
@@ -202,6 +204,11 @@ sub make_descr {
     close $fh;
 
     return 1;
+}
+
+sub make_makesum {
+    my ($self, $di) = @_;
+    system('make', 'makesum');
 }
 
 1;
