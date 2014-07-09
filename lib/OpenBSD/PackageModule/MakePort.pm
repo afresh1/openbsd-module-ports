@@ -23,7 +23,7 @@ use Cwd qw( getcwd );
 use File::Path qw( make_path );
 
 sub port_dir { $ENV{PORTSDIR} || '/usr/ports' }
-sub base_dir { '/tmp/generated_ports' }
+sub base_dir { port_dir() . '/mystuff' }
 sub makefile_template {
     port_dir() . '/infrastructure/templates/Makefile.template'
 }
