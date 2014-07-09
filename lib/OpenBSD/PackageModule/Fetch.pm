@@ -39,6 +39,10 @@ sub fetch {
 
 sub format_dist {
     my ($self, $di) = @_;
+
+    $di->{makefile}->{COMMENT} =~ s/^.{57}\K.*$/.../
+        if length( $di->{makefile}->{COMMENT} ) > 60;
+
     return $di;
 }
 
