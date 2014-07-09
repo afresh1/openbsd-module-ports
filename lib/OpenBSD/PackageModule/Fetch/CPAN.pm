@@ -19,7 +19,7 @@ use warnings;
 
 use 5.010;
 
-sub base_url {'http://api.metacpan.org/v0'}
+sub base_url {'http://api.metacpan.org/v0/'}
 
 sub get_dist_info {
     my ( $self, $distribution ) = @_;

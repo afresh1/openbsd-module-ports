@@ -52,7 +52,7 @@ sub _get {
     my $base_url = $self->base_url();
 
     for ( 0 .. 2 ) {
-        open my $fh, '-|', $self->get_cmd, "$base_url/$url" or croak $!;
+        open my $fh, '-|', $self->get_cmd, "$base_url$url" or croak $!;
         my $content = do { local $/ = undef; <$fh> };
         close $fh;
         return $content if $content;
