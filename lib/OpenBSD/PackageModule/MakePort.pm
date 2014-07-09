@@ -132,13 +132,13 @@ sub make_makefile {
     my $depends_value = sub {
         my ($print_key, $value) = @_;
 
-        return $value unless ref $value eq 'HASH';
-
         my $sub_tabs = "\t" x int( length($print_key) / 8 );
         $sub_tabs .= "\t" if length($print_key) % 8;
         
         my @new;
-        foreach my $depend ( sort keys %{ $value } ) {
+        my @depends = ref $value eq 'HASH' ? sort keys %{$value} : ($value);
+
+        foreach my $depend (@depends) {
             my $v = $value->{$depend};
             push @new,
                 $v->{port} . ($v->{version} ? $v->{version} : '');
