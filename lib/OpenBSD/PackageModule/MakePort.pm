@@ -22,9 +22,10 @@ use Carp;
 use Cwd qw( getcwd );
 use File::Path qw( make_path );
 
+sub port_dir { $ENV{PORTSDIR} || '/usr/ports' }
 sub base_dir { '/tmp/generated_ports' }
 sub makefile_template {
-    '/usr/ports/infrastructure/templates/Makefile.template'
+    port_dir() . '/infrastructure/templates/Makefile.template'
 }
 
 sub _cp {
@@ -60,9 +61,9 @@ sub make_portdir {
     make_path($port_dir) or die "Couldn't make_path $port_dir: $!"
         unless -e $port_dir;
 
-    if (-e "/usr/ports/$port") {
+    if (-e port_dir() . "/$port") {
         (my $dst = $port_dir) =~ s{/[^/]+$}{};
-        _cp('-r', "/usr/ports/$port/", $dst);
+        _cp('-r', port_dir() . "/$port/", $dst);
         rename( "$port_dir/Makefile",  "$port_dir/Makefile.orig" );
         rename( "$port_dir/pkg/PLIST", "$port_dir/pkg/PLIST.orig" );
         unlink( "$port_dir/distinfo" );
