@@ -18,6 +18,7 @@ use warnings;
 
 use OpenBSD::PackageModule::Fetch::CPAN;
 use OpenBSD::PackageModule::Fetch::NPM;
+use OpenBSD::PackageModule::Fetch::PyPI;
 use OpenBSD::PackageModule::MakePort;
 
 use Cwd qw( getcwd );
@@ -34,6 +35,9 @@ sub port_it {
     }
     elsif ( $dist =~ s/^node-// ) {
         $f = OpenBSD::PackageModule::Fetch::NPM->new;
+    }
+    elsif ( $dist =~ s/^py-// ) {
+        $f = OpenBSD::PackageModule::Fetch::PyPI->new;
     }
     else {
         die "Unknown package type: $dist\n";
