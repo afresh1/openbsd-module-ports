@@ -30,6 +30,7 @@ our @EXPORT_OK = qw(
 
     dist_is_up_to_date
     port_value
+    make_in_port
 );
 
 sub port_dir { $ENV{PORTSDIR} || '/usr/ports' }
@@ -46,18 +47,24 @@ sub dist_is_up_to_date {
 
 sub port_value {
     my ( $di, $variable ) = @_;
-    my $value = _make_in_port( $di, "show=$variable" );
+    my $value = make_in_port( $di, "show=$variable" );
     chomp $value;
     return $value;
 }
 
-sub _make_in_port {
+sub make_in_port {
     my ( $di, @args ) = @_;
 
     my $old_cwd = getcwd();
     my $port    = $di->{port} || die "Dist Info has no port";
-    my $dir     = "/usr/ports/$port";
-    return '' unless -e $dir;
+    my $dir;
+    foreach my $d ( base_dir(), port_dir() ) {
+        if ( -d "$d/$port" ) {
+            $dir = "$d/$port";
+            last;
+        }
+    }
+    return '' unless $dir;
 
     chdir $dir or die "Couldn't chdir $dir: $!";
 
