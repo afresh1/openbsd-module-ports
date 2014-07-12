@@ -16,12 +16,12 @@ use warnings;
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use OpenBSD::PackageModule::Utils qw( dist_is_up_to_date );
+
 use OpenBSD::PackageModule::Fetch::CPAN;
 use OpenBSD::PackageModule::Fetch::NPM;
 use OpenBSD::PackageModule::Fetch::PyPI;
 use OpenBSD::PackageModule::MakePort;
-
-use Cwd qw( getcwd );
 
 port_it($_) for @ARGV;
 
@@ -49,7 +49,7 @@ sub port_it {
         return;
     }
 
-    return if $f->dist_is_up_to_date($di);
+    return if dist_is_up_to_date($di);
 
     foreach my $key ( sort keys %{ $di->{makefile} } ) {
         next unless $key =~ /_DEPENDS$/;
@@ -67,36 +67,3 @@ sub port_it {
     my $mp = OpenBSD::PackageModule::MakePort->new();    # TODO: new($di);
     $mp->make_port($di);
 }
-
-sub dist_is_up_to_date {
-    my ($di) = @_;
-    my $current_distname = port_value( $di, 'DISTNAME' );
-    return $current_distname eq $di->{distname};
-}
-
-sub port_value {
-    my ( $di, $variable ) = @_;
-    my $value = _make_in_port( $di, "show=$variable" );
-    chomp $value;
-    return $value;
-}
-
-sub _make_in_port {
-    my ( $di, @args ) = @_;
-
-    my $old_cwd = getcwd();
-    my $port    = $di->{port} || die "Dist Info has no port";
-    my $dir     = "/usr/ports/$port";
-    return '' unless -e $dir;
-
-    chdir $dir or die "Couldn't chdir $dir: $!";
-
-    open my $fh, '-|', 'make', @args or die "Couldn't launch make";
-    my $output = do { local $/ = undef; <$fh> };
-    close $fh;
-
-    chdir $old_cwd or die "Couldn't chdir $old_cwd: $!";
-
-    return $output;
-}
-

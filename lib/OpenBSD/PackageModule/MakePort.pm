@@ -22,11 +22,7 @@ use Carp;
 use Cwd qw( getcwd );
 use File::Path qw( make_path );
 
-sub port_dir { $ENV{PORTSDIR} || '/usr/ports' }
-sub base_dir { port_dir() . '/mystuff' }
-sub makefile_template {
-    port_dir() . '/infrastructure/templates/Makefile.template'
-}
+use OpenBSD::PackageModule::Utils qw( port_dir base_dir makefile_template );
 
 sub _cp {
     my (@args) = @_;
@@ -139,7 +135,7 @@ sub make_makefile {
 
         my $sub_tabs = "\t" x int( length($print_key) / 8 );
         $sub_tabs .= "\t" if length($print_key) % 8;
-        
+
         my @new;
         my @depends = ref $value eq 'HASH' ? sort keys %{$value} : ($value);
 
