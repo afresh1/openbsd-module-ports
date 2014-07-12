@@ -22,7 +22,12 @@ use Carp;
 use Cwd qw( getcwd );
 use File::Path qw( make_path );
 
-use OpenBSD::PackageModule::Utils qw( port_dir base_dir makefile_template );
+use OpenBSD::PackageModule::Utils qw(
+    port_dir
+    base_dir
+    make_in_port
+    makefile_template
+);
 
 sub _cp {
     my (@args) = @_;
@@ -213,9 +218,7 @@ sub make_plist {
     my ($self, $di) = @_;
 
     make_path('pkg') unless -e 'pkg';
-
-    local $ENV{PORTSDIR_PATH} = $self->base_dir . ':' . port_dir();
-    system('make', 'plist');
+    make_in_port($di, 'plist');
 
     return 1;
 }
