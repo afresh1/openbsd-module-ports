@@ -56,7 +56,7 @@ sub make_in_port {
     my ( $di, @args ) = @_;
 
     my $old_cwd = getcwd();
-    my $port    = $di->{port} || die "Dist Info has no port";
+    my $port    = $di->{port} || croak("Dist Info has no port");
     my $dir;
     foreach my $d ( base_dir(), port_dir() ) {
         if ( -d "$d/$port" ) {
