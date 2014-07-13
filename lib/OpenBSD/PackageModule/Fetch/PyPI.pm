@@ -19,6 +19,10 @@ use warnings;
 
 use 5.010;
 
+use OpenBSD::PackageModule::Utils qw( port_value make_in_port );
+
+use IPC::Open2;
+
 sub base_url {'https://pypi.python.org/pypi?:action=json&name='}
 
 sub get_dist_info {
@@ -73,14 +77,75 @@ sub format_dist {
     return $self->SUPER::format_dist( \%formatted );
 }
 
+# XXX Why python, why?  so ugly!
+sub _python_requires {
+    my ($self, $di) = @_;
+
+    $di->{port} ||= $self->port_for_dist( $di );
+
+    make_in_port( $di, 'patch' );
+    my $wrksrc = port_value($di, 'WRKSRC') or die "Couldn't find WRKSRC";
+
+    # XXX This is a terrible hack!
+    # XXX Instead this should ask the package system for an installed ver
+    # XXX for now though, need to see if I can make it work.
+    my ($python) = glob('/usr/local/bin/python[0-9].[0-9]');
+
+    # this may be worse.
+    my ($chld_out, $chld_in);
+    my $pid = open2( $chld_out, $chld_in, "cd '$wrksrc' && $python" );
+
+    print $chld_in <<'EOL';
+import distutils.core
+import re
+
+def _setup(**kwargs):
+    for name, value in kwargs.items():
+        if re.match(r".*require", name):
+            print '{0} = {1}'.format(name, value)
+
+distutils.core.setup = _setup
+import setup
+EOL
+    
+    close $chld_in;
+
+    my (@requires) = <$chld_out>;
+
+    waitpid( $pid, 0 );
+    my $chld_exit_status = $? >> 8;
+
+    die "Python died unexpectedly with exit status: $chld_exit_status"
+        if $chld_exit_status;
+
+    my %requires;
+
+    # at least these should be well formatted.
+    foreach my $line (@requires) {
+        chomp $line;
+        my ($type, $requires) = split /\s+=\s+/, $line, 2;
+
+        $requires =~ s/^\[(.*)\]$/$1/;
+        $requires =~ s/'//g;
+        my @d = split /\s*,\s*/, $requires;
+
+        foreach (@d) {
+            my ($d, $v) = /^([^=]+?)(\W?=.*)?$/;
+            $requires{$type}{$d} = $v || '';
+        }
+    }
+
+    return %requires;
+}
+
 sub _format_depends {
     my ( $self, $di ) = @_;
 
-    my %prereqs = %{ $di->{info} || {} };
+    my %prereqs = $self->_python_requires( $di );
 
     my %depend_map = (
         BUILD_DEPENDS => ['setup_requires'],
-        RUN_DEPENDS   => ['install_requires'],
+        RUN_DEPENDS   => ['install_requires', 'requires'],
         TEST_DEPENDS  => ['tests_require'],
         # ['extras_require'] ???
     );
@@ -93,15 +158,14 @@ sub _format_depends {
             next unless $prereqs{$key};
             my %r = %{ $prereqs{$key} || {} };
 
-            foreach my $module ( sort keys %r ) {
-                my $dist = $self->get_dist_for_module($module);
+            foreach my $dist ( sort keys %r ) {
                 my $port = $self->port_for_dist($dist);
 
                 # say ". $port [$module]";
                 $depends{$type}{$port} = {
                     port    => $port,
                     dist    => $dist,
-                    version => '>=' . $r{$module}, # assume >=
+                    version => $r{$dist},
                 };
             }
         }
@@ -122,7 +186,7 @@ sub port_for_dist {
     # Map dist name on PyPI to port name
     # TODO: This should not be hardcoded and stored here.
     #$dist = {
-    #}->{$dist} || $dist;
+    #}->{$dist} || $dist;mo
 
     my ($dir) = glob("/usr/ports/*/py-$dist");
     $dir = "PyPI/py-$dist" unless $dir && $dir !~ /\*/;
