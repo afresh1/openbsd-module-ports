@@ -21,7 +21,7 @@ use 5.010;
 use Carp qw( croak );
 use JSON::PP qw( decode_json );
 
-sub get_cmd  { qw( lynx --dump ) }
+sub get_cmd  { qw( ftp -o- ) }
 
 sub new {
     my ($class, %args) = @_;
