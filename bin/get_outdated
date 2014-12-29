@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# Uses http://portroach.openbsd.org to print a list of outdated ports.
+# Although useful, shows how you could extend things easily.
+# PERL5LIB=lib bin/pkg_module `bin/get_outdated | sed -e 's/: .*//'`
+
+my $maintainer = shift || 'andrew fresh <afresh1@openbsd.org>';
+
+my $outdated = FetchOutdated->new->outdated($maintainer);
+print "$_->{name}: $_->{ver} -> $_->{newver}\n" for @{ $outdated || [] };
+
+package FetchOutdated;
+use parent 'OpenBSD::PackageModule::Fetch';
+sub base_url {'http://portroach.openbsd.org/json/'}
+
+sub outdated { [ grep { $_->{newver} } @{ shift->get(@_) || [] } ] }
+
+sub get {
+    my ( $self, $m ) = @_;
+    return $self->_get_json("$m.json");
+}
