@@ -64,7 +64,7 @@ sub get_readme_for_dist {
     my ( $self, $di ) = @_;
 
     my $path = join '/', 'source', @{$di}{qw( author name )}, 'README';
-    return $self->_get($path);
+    return eval { $self->_get($path) } || 'XXX - NO README FOUND - XXX';
 }
 
 sub format_dist {
