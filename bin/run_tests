@@ -1,0 +1,44 @@
+#!/bin/sh
+
+ORIG_PWD=$PWD
+export MAKECONF=`mktemp -t mk.conf-XXXXXX`
+
+cleanup() {
+    cd $ORIG_PWD
+    rm -f ${MAKECONF}
+    exit
+}
+trap cleanup EXIT INT QUIT TERM
+
+run_tests() {
+  dir=$1
+  cd $dir
+
+  $SUDO pkg_delete /var/db/pkg/*
+  $SUDO rm -rf /usr/ports/pobj/* /tmp/pobj/*
+
+  make clean=depends
+  make test
+
+  cd $ORIG_PWD
+}
+
+#cd /usr/ports/mystuff
+
+[ $# -eq 0 ] && set -- */*/Makefile
+[ -e /etc/mk.conf ] && cat /etc/mk.conf > $MAKECONF
+
+for m in "$@"; do
+  d=${m%Makefile}
+  d=${d%/}
+  echo "Testing $d"
+  echo "# Testing $d" >> $MAKECONF
+
+  echo PORTSDIR_PATH="/usr/ports:/usr/ports/mystuff" >> $MAKECONF
+  l=$( echo $d | tr / _ ).log
+  run_tests $d | tee -a $l
+
+  echo PORTSDIR_PATH="/usr/ports/mystuff:/usr/ports" >> $MAKECONF
+  l=$( echo $d | tr / _ )_mystuff.log
+  run_tests $d | tee -a $l
+done
