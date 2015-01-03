@@ -1,0 +1,19 @@
+#!/bin/sh
+
+CVSROOT=anoncvs@openbsd.cs.toronto.edu:/cvs
+
+SUBDIR=$PWD
+PORTSDIR_PATH=$( make show=PORTSDIR_PATH | tr ':' "\n" |
+   awk '{ print length(), $0 | "sort -rn" }' |
+   sed -e 's/^[0-9]* //' )
+
+for d in $PORTSDIR_PATH; do
+  SUBDIR=${SUBDIR:#$d}
+done
+SUBDIR=${SUBDIR:#/}
+
+PORT=$( basename $SUBDIR )
+PKGNAME=$( make show=PKGNAME )
+VER=${PKGNAME:#$PORT-}
+
+cvs diff | mail -s "[UPDATE] $SUBDIR to $VER" $USER
