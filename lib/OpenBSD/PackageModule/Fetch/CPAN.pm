@@ -74,11 +74,15 @@ sub format_dist {
     my ($category) = split m{/}x, $port;
 
     my $distname = $di->{archive};
+    my $suffix;
     if ( $distname =~ s/\.tar\.gz$//x ) {
 
         # do nothing
         # Eventually, if we strip other types
         # TODO: It could become an EXTRACT_SUFX
+    }
+    elsif ( $distname =~ s/(\.tar.[^.]+)$// or $distname =~ s/(\.[^.]+)$// ) {
+	$suffix = $1;
     }
 
     my $license = join ' ',
@@ -105,6 +109,8 @@ sub format_dist {
 
         port => $port,
     );
+
+    $formatted{makefile}{EXTRACT_SUFX} = $suffix if $suffix;
 
     delete $formatted{HOMEPAGE}
         if $formatted{HOMEPAGE}
