@@ -26,7 +26,7 @@ fullpkgpath() {
 
 CURDIR=$PWD
 cd /usr/ports/databases/sqlports && PACKAGE=compact make install && cd $OLDPWD
-DEPENDS=$( depends $( fullpkgpath ) )
+DEPENDS=$( depends $( fullpkgpath ) | sed -e 's/,[^ ]+//g' )
 
 sudo pkg_delete /var/db/pkg/*
 [ -n "$EXTRA_PACKAGES" ] && sudo pkg_add $EXTRA_PACKAGES
