@@ -16,4 +16,11 @@ PORT=$( basename $SUBDIR )
 PKGNAME=$( make show=PKGNAME )
 VER=${PKGNAME:#$PORT-}
 
-cvs diff | mail -s "[UPDATE] $SUBDIR to $VER" $USER
+if [ -e CVS ]; then
+	cvs diff | mail -s "[UPDATE] $SUBDIR to $VER" $USER
+else
+	cd ../.. && (
+	    cat $SUBDIR/pkg/DESCR
+	    tar czf - $SUBDIR | uuencode $PKGNAME.tar.gz
+	) | mail -s "[NEW] $SUBDIR $VER" $USER
+fi
