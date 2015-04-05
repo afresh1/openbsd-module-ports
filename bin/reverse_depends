@@ -1,0 +1,34 @@
+#!/bin/sh
+
+depends() {
+	PKG=$( echo $1 | sed -e "s/'/''/g" )
+
+	sqlite3 /usr/local/share/sqlports <<EOL
+SELECT DISTINCT FULLPKGPATH FROM Depends 
+ WHERE DEPENDSPATH = '$PKG';
+EOL
+}
+
+fullpkgpath() {
+	local d
+	local SUBDIR=$PWD
+	local PORTSDIR_PATH=$( make show=PORTSDIR_PATH | tr ':' "\n" |
+   	    awk '{ print length(), $0 | "sort -rn" }' |
+   	    sed -e 's/^[0-9]* //' )
+	
+	for d in $PORTSDIR_PATH; do
+  		SUBDIR=${SUBDIR:#$d}
+	done
+	SUBDIR=${SUBDIR:#/}
+	echo $SUBDIR
+}
+
+cd /usr/ports/databases/sqlports && PACKAGE=compact make install && cd $OLDPWD
+if [ $# -eq 0 ]; then
+	set -- $( fullpkgpath )
+fi
+
+for d in "$@"; do
+	echo "${d:%/}"
+	depends ${d:%/}
+done | sort -u
