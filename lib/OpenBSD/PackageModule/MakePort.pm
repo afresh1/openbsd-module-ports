@@ -127,7 +127,12 @@ sub make_makefile {
 
     my $old_port = $self->parse_makefile("Makefile.orig") || {};
 
+    my %copy_values = map { $_ => 1 } qw(
+        EPOCH
+        MAINTAINER
+    );
     my @makefile = @{ $old_port->{makefile} || [] };
+    %copy_values = () unless @makefile;
     @makefile = (
         '# $OpenBSD$' . "\n",
         grep { $_ !~ /^\#/x }
@@ -175,8 +180,10 @@ sub make_makefile {
         if ( ref $line eq 'HASH' ) {
             my $key = $line->{key};
 
-            # TODO: merge in existing values for "some" ports.
             my $value = delete $configs{$key};
+            if (not $value and $copy_values{$key}) {
+                $value = $line->{value};
+            }
             next unless $value;
             my $tabs = "\t" x ($line->{tabs} || 1);
             my $print_key = "$key =$tabs";
