@@ -130,6 +130,8 @@ sub make_makefile {
     my %copy_values = map { $_ => 1 } qw(
         EPOCH
         MAINTAINER
+        CONFIGURE_ARGS
+        CONFIGURE_STYLE
     );
     my @makefile = @{ $old_port->{makefile} || [] };
     %copy_values = () unless @makefile;
