@@ -26,6 +26,7 @@ if [ -e CVS ]; then
 else
 	cd $PORTDIR && (
 	    cat $SUBDIR/pkg/DESCR
+            echo "\nPipe through uudecode to get $PKGNAME.tar.gz\n";
 	    tar czf - $SUBDIR | uuencode $PKGNAME.tar.gz
 	) | mail -s "[NEW] $SUBDIR $VER" $USER
 fi
