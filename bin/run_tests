@@ -25,7 +25,8 @@ run_tests() {
 
 #cd /usr/ports/mystuff
 
-[ $# -eq 0 ] && set -- */*/Makefile
+[ $# -eq 0 -a -d pkg ] && set -- .
+[ $# -eq 0 ]           && set -- */*/Makefile
 [ -e /etc/mk.conf ] && cat /etc/mk.conf > $MAKECONF
 
 for m in "$@"; do
@@ -34,11 +35,14 @@ for m in "$@"; do
   echo "Testing $d"
   echo "# Testing $d" >> $MAKECONF
 
+  p="$d"
+  [ "$p" = "." ] && p=$( make show=BASE_PKGPATH )
+
   echo PORTSDIR_PATH="/usr/ports:/usr/ports/mystuff" >> $MAKECONF
-  l=$( echo $d | tr / _ ).log
+  l=$( echo $p | tr / _ ).log
   run_tests $d | tee -a $l
 
   echo PORTSDIR_PATH="/usr/ports/mystuff:/usr/ports" >> $MAKECONF
-  l=$( echo $d | tr / _ )_mystuff.log
+  l=$( echo $p | tr / _ )_mystuff.log
   run_tests $d | tee -a $l
 done

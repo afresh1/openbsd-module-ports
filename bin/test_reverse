@@ -33,8 +33,8 @@ sudo pkg_delete /var/db/pkg/*
 
 # First get all the packages installed.
 rm -rf /usr/ports/pobj/*
-for p in $DEPENDS; do cd /usr/ports/$p && make prepare; done
+for p in $DEPENDS; do cd /usr/ports/$p && make PLIST_DB= prepare; done
 
 # Then actually get the results
 rm -rf /usr/ports/pobj/*
-for p in $DEPENDS; do cd /usr/ports/$p && make test; done 2>&1 | tee $CURDIR/reverse_depends_results
+for p in $DEPENDS; do cd /usr/ports/$p && make PLIST_DB= test; done 2>&1 | tee $CURDIR/reverse_depends_results
