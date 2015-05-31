@@ -1,4 +1,5 @@
 #!/bin/sh
+BINDIR=$( readlink -f $(dirname $0) )
 
 CVSROOT=anoncvs@openbsd.cs.toronto.edu:/cvs
 
@@ -24,9 +25,13 @@ VER=${PKGNAME:#$PORT-}
 if [ -e CVS ]; then
 	cvs diff | mail -s "[UPDATE] $SUBDIR to $VER" $USER
 else
-	cd $PORTDIR && (
-	    cat $SUBDIR/pkg/DESCR
-            echo "\nPipe through uudecode to get $PKGNAME.tar.gz\n";
-	    tar czf - $SUBDIR | uuencode $PKGNAME.tar.gz
-	) | mail -s "[NEW] $SUBDIR $VER" $USER
+    tmpdir=$( mktemp -d -t mail_port_diff-XXXXXX )
+    [ -n $tmpdir -a -d $tmpdir ] || exit 2
+
+	cd $PORTDIR
+    tar czf $tmpdir/$PKGNAME.tar.gz $SUBDIR
+    cat $SUBDIR/pkg/DESCR | $BINDIR/sendmime -s "[NEW] $SUBDIR $VER" \
+        -f $tmpdir/$PKGNAME.tar.gz $USER
+
+    rm -rf $tmpdir
 fi

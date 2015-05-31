@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use MIME::Base64      qw( encode_base64 );
+use MIME::QuotedPrint qw( encode_qp     );
+use File::Basename    qw( basename );
+use Getopt::Long;
+
+my $subject;
+my $filename;
+
+GetOptions(
+    "filename=s" => \$filename,
+    "subject=s"  => \$subject
+) or die ("Error in command line argument\n");
+
+my $body = encode_qp(do { local $/ = undef; <STDIN> }, "\015\012");
+
+open my $fh, '<', $filename or die $!;
+my $binary = do { local $/ = undef; <$fh> };
+close $fh;
+my $data = encode_base64( $binary );
+
+$filename = basename($filename);
+
+my $boundary = "=====" . ( int rand 999_999_999 ) . "=====";
+
+my $msg = <<"EOL";
+Subject: $subject
+Content-Type: Multipart/Mixed; boundary="$boundary"
+
+--$boundary
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+$body
+--$boundary
+Content-Type: application/x-tar-gz; name="$filename"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="$filename"
+
+$data
+--$boundary--
+EOL
+
+open my $sendmail, '|-', '/usr/sbin/sendmail', @ARGV or die $!;
+print $sendmail $msg;
+close $sendmail;
