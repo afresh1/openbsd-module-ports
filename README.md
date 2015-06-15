@@ -1,7 +1,7 @@
 openbsd-module-ports
 ====================
 
-A framework to generate OpenBSD ports for thinks like ruby gems and perl modules
+A framework to generate OpenBSD ports for things like Ruby Gems and Perl modules
 
 This is a very rough work in progress still.
 There are many things it doesn't do yet but for me, it is better than nothing.
