@@ -128,10 +128,11 @@ sub make_makefile {
     my $old_port = $self->parse_makefile("Makefile.orig") || {};
 
     my %copy_values = map { $_ => 1 } qw(
-        EPOCH
-        MAINTAINER
         CONFIGURE_ARGS
         CONFIGURE_STYLE
+        EPOCH
+        MAINTAINER
+        SHARED_ONLY
     );
     my @makefile = @{ $old_port->{makefile} || [] };
     %copy_values = () unless @makefile;
