@@ -142,7 +142,7 @@ sub _format_depends {
             next unless $prereqs{$key};
 
             foreach my $want (qw( requires recommends )) {
-                next if $want eq 'recommends' and $type ne 'TEST_DEPENDS';
+                my $t = $want eq 'recommends' ? 'TEST_DEPENDS' : $type;
                 my %r = %{ $prereqs{$key}{$want} || {} };
 
                 foreach my $module ( sort keys %r ) {
@@ -152,7 +152,7 @@ sub _format_depends {
                     my $port = $self->port_for_dist($dist);
 
                     # say ". $port [$module]";
-                    $depends{$type}{$port} = {
+                    $depends{$t}{$port} = {
                         port    => $port,
                         dist    => $dist,
                         version => '>=' . $r{$module}, # assume >=
