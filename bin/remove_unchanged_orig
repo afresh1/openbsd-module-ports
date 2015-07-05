@@ -1,0 +1,6 @@
+#!/bin/sh
+
+find . -name '*.orig' | while read f; do
+    orig="${f%.orig}"
+    diff -I '.*\$OpenBSD.*' -q "$f" "$orig" >/dev/null && mv "$orig" "$f"
+done
