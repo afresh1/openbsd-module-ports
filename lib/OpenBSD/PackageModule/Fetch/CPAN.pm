@@ -152,11 +152,13 @@ sub _format_depends {
                     my $port = $self->port_for_dist($dist);
 
                     # say ". $port [$module]";
-                    $depends{$t}{$port} = {
+                    my %details = (
                         port    => $port,
                         dist    => $dist,
-                        version => '>=' . $r{$module}, # assume >=
-                    };
+                    );
+                    # assume >=
+                    $details{version} = '>=' . $r{$module} if $r{$module};
+                    $depends{$t}{$port} = \%details;
                 }
             }
         }
