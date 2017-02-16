@@ -1,0 +1,20 @@
+#!/bin/sh
+
+PORTSDIR=${PORTSDIR:-/usr/ports}
+DISTDIR=${DISTDIR:-$PORTSDIR/distfiles}
+DISTINFO=$( mktemp -t distinfo-XXXXXXXXX )
+trap 'rm -f $DISTINFO; exit 1' 0 1 2 15
+
+find $PORTSDIR -name distinfo -exec cat {} + > $DISTINFO
+
+cd $DISTDIR
+find . -type f -maxdepth 1 | while read f; do
+  f=$( basename $f )
+  if !  sha256 -c -C $DISTINFO $f; then
+    echo "Removing bad $f"
+    rm $f
+  fi
+done
+
+rm -f $DISTINFO
+
