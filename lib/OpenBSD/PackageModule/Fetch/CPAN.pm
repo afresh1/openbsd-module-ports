@@ -95,6 +95,7 @@ sub format_dist {
             MODULES     => "cpan",
             CATEGORIES  => "$category",
             CPAN_AUTHOR => "$di->{author}",
+            PKG_ARCH    => "*",
 
             PERMIT_PACKAGE_CDROM => 'Yes',    # TODO: decide based on license
 
