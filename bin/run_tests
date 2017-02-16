@@ -1,5 +1,6 @@
 #!/bin/sh
 
+SUDO=${SUDO:-doas}
 ORIG_PWD=$PWD
 export MAKECONF=`mktemp -t mk.conf-XXXXXX`
 

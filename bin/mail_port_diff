@@ -1,36 +1,23 @@
 #!/bin/sh
 BINDIR=$( readlink -f $(dirname $0) )
 
-CVSROOT=anoncvs@openbsd.cs.toronto.edu:/cvs
+export CVSROOT=anoncvs@obsdacvs.cs.toronto.edu:/cvs
 
-SUBDIR=$PWD
-PORTSDIR_PATH=$( make show=PORTSDIR_PATH | tr ':' "\n" |
-   awk '{ print length(), $0 | "sort -rn" }' |
-   sed -e 's/^[0-9]* //' )
-
-PORTDIR=
-for d in $PORTSDIR_PATH; do
-    if [ "$SUBDIR" != "${SUBDIR:#$d}" ]; then
-        SUBDIR="${SUBDIR:#$d}"
-        PORTDIR="$d"
-        break
-    fi
-done
-SUBDIR=${SUBDIR:#/}
-
-PORT=$( basename $SUBDIR )
+PKGPATH=$( make show=BASE_PKGPATH )
 PKGNAME=$( make show=PKGNAME )
+PORT=$( basename -- $PKGPATH )
 VER=${PKGNAME:#$PORT-}
 
 if [ -e CVS ]; then
-	cvs diff | mail -s "[UPDATE] $SUBDIR to $VER" $USER
+	cvs diff | mail -s "[UPDATE] $PKGPATH to $VER" $USER
 else
     tmpdir=$( mktemp -d -t mail_port_diff-XXXXXX )
     [ -n $tmpdir -a -d $tmpdir ] || exit 2
 
-	cd $PORTDIR
-    tar czf $tmpdir/$PKGNAME.tar.gz $SUBDIR
-    cat $SUBDIR/pkg/DESCR | $BINDIR/sendmime -s "[NEW] $SUBDIR $VER" \
+    DESCR=$( make show=DESCR )
+    cd ${PWD%$PKGPATH}
+    tar czf $tmpdir/$PKGNAME.tar.gz $PKGPATH
+    cat $DESCR | $BINDIR/sendmime -s "[NEW] $PKGPATH $VER" \
         -f $tmpdir/$PKGNAME.tar.gz $USER
 
     rm -rf $tmpdir

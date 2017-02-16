@@ -9,23 +9,9 @@ SELECT DISTINCT FULLPKGPATH FROM Depends
 EOL
 }
 
-fullpkgpath() {
-	local d
-	local SUBDIR=$PWD
-	local PORTSDIR_PATH=$( make show=PORTSDIR_PATH | tr ':' "\n" |
-   	    awk '{ print length(), $0 | "sort -rn" }' |
-   	    sed -e 's/^[0-9]* //' )
-	
-	for d in $PORTSDIR_PATH; do
-  		SUBDIR=${SUBDIR:#$d}
-	done
-	SUBDIR=${SUBDIR:#/}
-	echo $SUBDIR
-}
-
 cd /usr/ports/databases/sqlports && PACKAGE=compact make install && cd $OLDPWD
 if [ $# -eq 0 ]; then
-	set -- $( fullpkgpath )
+	set -- $( make show=BASE_PKGPATH )
 fi
 
 for d in "$@"; do
