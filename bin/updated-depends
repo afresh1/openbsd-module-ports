@@ -1,8 +1,7 @@
 #!/bin/sh
-BASEDIR=${PWD}
 
 find . -name 'pkg' | sed -e 's,^./,,;s,/*pkg$,,' | while read d; do
-     cd ${BASEDIR}/$d && make all-dir-depends test-dir-depends
+	( [ -e $d/Makefile ] && cd $d && make all-dir-depends test-dir-depends )
 done | tsort | while read p; do
-    test -e /usr/ports/mystuff/$p && echo $p
+	test -e "$p" && echo $p
 done
