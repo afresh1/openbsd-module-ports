@@ -185,6 +185,7 @@ sub port_for_dist {
         'YAML-LibYAML' => 'YAML-XS',
         Mojolicious    => 'Mojo',
         'libwww-perl'  => 'libwww',
+        'Net-SSLeay'   => 'Net_SSLeay',
     }->{$dist} || $dist;
 
     my ($dir) = glob("/usr/ports/*/p5-$dist");
