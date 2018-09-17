@@ -15,7 +15,16 @@ GetOptions(
     "subject=s"  => \$subject
 ) or die ("Error in command line argument\n");
 
+# Allow --filename=foo.txt,bar.pdf
 @filenames = map { split /,/ } @filenames;
+
+my %content_types;
+if (@filenames) {
+	open my $fh, '-|', ( 'file', '-i', @filenames ) or die $!;
+        %content_types
+            = map { split /:\s*/, $_, 2 } map { chomp; $_ } readline($fh);
+	close $fh;
+}
 
 my $boundary = "=====" . ( int rand 999_999_999 ) . "=====";
 my $body = encode_qp(do { local $/ = undef; <STDIN> } );
@@ -32,16 +41,23 @@ $body
 EOL
 
 foreach my $filename (@filenames) {
-	open my $fh, '<', $filename or die $!;
+	open my $fh, '<', $filename or die "Unable to open $filename: $!";
 	my $binary = do { local $/ = undef; <$fh> };
 	close $fh;
+
+	# we want a special content-type for tar.gz files
+	# so apps know to open the whole thing.
+        my $content_type
+            = $filename =~ /\.tar\.gz$/i
+            ? 'application/x-tar-gz'
+            : $content_types{$filename};
 
 	$filename = basename($filename);
 	my $data = encode_base64($binary);
 
 	$msg .= <<"EOL";
 --$boundary
-Content-Type: application/x-tar-gz; name="$filename"
+Content-Type: $content_type; name="$filename"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="$filename"
 
