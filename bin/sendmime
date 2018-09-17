@@ -8,23 +8,17 @@ use File::Basename    qw( basename );
 use Getopt::Long;
 
 my $subject;
-my $filename;
+my @filenames;
 
 GetOptions(
-    "filename=s" => \$filename,
+    "filename=s" => \@filenames,
     "subject=s"  => \$subject
 ) or die ("Error in command line argument\n");
 
-my $body = encode_qp(do { local $/ = undef; <STDIN> }, "\015\012");
-
-open my $fh, '<', $filename or die $!;
-my $binary = do { local $/ = undef; <$fh> };
-close $fh;
-my $data = encode_base64( $binary );
-
-$filename = basename($filename);
+@filenames = map { split /,/ } @filenames;
 
 my $boundary = "=====" . ( int rand 999_999_999 ) . "=====";
+my $body = encode_qp(do { local $/ = undef; <STDIN> } );
 
 my $msg = <<"EOL";
 Subject: $subject
@@ -35,14 +29,27 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
 $body
+EOL
+
+foreach my $filename (@filenames) {
+	open my $fh, '<', $filename or die $!;
+	my $binary = do { local $/ = undef; <$fh> };
+	close $fh;
+
+	$filename = basename($filename);
+	my $data = encode_base64($binary);
+
+	$msg .= <<"EOL";
 --$boundary
 Content-Type: application/x-tar-gz; name="$filename"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="$filename"
 
 $data
---$boundary--
 EOL
+}
+
+$msg .= "--$boundary--\n";
 
 open my $sendmail, '|-', '/usr/sbin/sendmail', @ARGV or die $!;
 print $sendmail $msg;
