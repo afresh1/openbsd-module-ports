@@ -15,7 +15,7 @@ run_tests() {
   dir=$1
   cd $dir
 
-  $SUDO pkg_delete /var/db/pkg/*
+  $SUDO pkg_delete -X /var/db/pkg/*-firmware-*
   $SUDO rm -rf /usr/ports/pobj/* /tmp/pobj/*
 
   make clean=depends
