@@ -1,0 +1,25 @@
+#!/bin/sh
+#set -x
+
+usage() {
+    echo "$0 marc.info?url or message-id" >&2
+    exit 255
+}
+
+[ "$*" ] || usage
+
+base="https://marc.info"
+
+for url in "$@"; do
+	[ "$url" = "${url#http}" ] && url="${base}/?m=$url"
+
+	ftp -o- -i -M "$url" | grep '\&q=p' | while read line; do
+		href=${line##*href=\"}
+		href=${href%%\"*}
+		name=${line%\"*}
+		name=${name##*\"}
+
+		ftp -o "$name" -i "${base}/$href"
+		echo "Downloaded $name from ${base}/$href"
+	done
+done
