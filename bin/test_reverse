@@ -14,7 +14,7 @@ CURDIR=$PWD
 cd /usr/ports/databases/sqlports && PACKAGE=compact make install && cd $OLDPWD
 DEPENDS=$( depends $( make show=BASE_PKGPATH ) | sed -e 's/,[^ ]+//g' )
 
-doas pkg_delete /var/db/pkg/*
+doas pkg_delete -X /var/db/pkg/*-firmware-*
 [ -n "$EXTRA_PACKAGES" ] && sudo pkg_add $EXTRA_PACKAGES
 
 # First get all the packages installed.
