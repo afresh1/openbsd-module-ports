@@ -6,6 +6,10 @@ usage() {
     exit 255
 }
 
+_randsleep() {
+    sleep $(jot -p 1 -r 1 0 3)
+}
+
 [ "$*" ] || usage
 
 base="https://marc.info"
@@ -13,12 +17,14 @@ base="https://marc.info"
 for url in "$@"; do
 	[ "$url" = "${url#http}" ] && url="${base}/?m=$url"
 
+	_randsleep
 	ftp -o- -i -M "$url" | grep '\&q=p' | while read line; do
 		href=${line##*href=\"}
 		href=${href%%\"*}
 		name=${line%\"*}
 		name=${name##*\"}
 
+		_randsleep
 		ftp -o "$name" -i "${base}/$href"
 		echo "Downloaded $name from ${base}/$href"
 	done
