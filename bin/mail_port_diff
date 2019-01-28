@@ -8,6 +8,8 @@ PKGNAME=$( make show=PKGNAME )
 PORT=$( basename -- $PKGPATH )
 VER=${PKGNAME:#$PORT-}
 
+/usr/ports/infrastructure/bin/portcheck || exit
+
 if [ -e CVS ]; then
 	cvs diff | mail -s "[UPDATE] $PKGPATH to $VER" $USER
 else
