@@ -25,6 +25,7 @@ for url in "$@"; do
 		name=${name##*\"}
 
 		_randsleep
+		echo "$url" > "$name.txt"
 		ftp -o "$name" -i "${base}/$href"
 		echo "Downloaded $name from ${base}/$href"
 	done
