@@ -3,6 +3,7 @@ BINDIR=$( readlink -f $(dirname $0) )
 
 export CVSROOT=anoncvs@obsdacvs.cs.toronto.edu:/cvs
 
+MAINTAINER=$( make show=MAINTAINER )
 PKGPATH=$( make show=BASE_PKGPATH )
 PKGNAME=$( make show=PKGNAME )
 PORT=$( basename -- $PKGPATH )
@@ -11,7 +12,10 @@ VER=${PKGNAME:#$PORT-}
 /usr/ports/infrastructure/bin/portcheck || exit $?
 
 if [ -e CVS ]; then
-	cvs diff | mail -s "[UPDATE] $PKGPATH to $VER" $USER
+	(
+		echo "MAINTAINER:\nTo: $MAINTAINER\n\n"
+		cvs diff
+	) | mail -s "[UPDATE] $PKGPATH to $VER" $USER
 else
     tmpdir=$( mktemp -d -t mail_port_diff-XXXXXX )
     [ -n $tmpdir -a -d $tmpdir ] || exit 2
