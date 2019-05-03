@@ -9,7 +9,11 @@ PKGNAME=$( make show=PKGNAME )
 PORT=$( basename -- $PKGPATH )
 VER=${PKGNAME:#$PORT-}
 
-/usr/ports/infrastructure/bin/portcheck || exit $?
+if ! /usr/ports/infrastructure/bin/portcheck ; then
+	err=$?
+	echo Portcheck failed, not mailing diff
+	exit $err
+fi
 
 if [ -e CVS ]; then
 	(
