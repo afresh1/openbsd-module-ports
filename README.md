@@ -70,6 +70,9 @@ because it expects to be able to pkg_delete all packages to test that things wor
    * If you diff these files you can compare the test run results
    * I often grep the diff output for `Result` or `Tests` for a summary
 
+* Look at the files you have and make sure they all look right
+   * less $( find . \( -type d -a -name CVS -prune \) -o -type f -print )
+
 * `openbsd-module-ports/bin/mail_port_diff`
    * A slight misnomer as it will actually mail a brand-new port as well
    * sends the mail to `$USER` so expects that you have a working `~/.forward`
