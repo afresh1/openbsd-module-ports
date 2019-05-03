@@ -181,11 +181,13 @@ sub port_for_dist {
     # TODO: This should not be hardcoded and stored here.
     $dist = {
         MailTools      => 'Mail-Tools',
+	'Template-Toolkit' => 'Template',
         TimeDate       => 'Time-TimeDate',
         'YAML-LibYAML' => 'YAML-XS',
         Mojolicious    => 'Mojo',
         'libwww-perl'  => 'libwww',
         'Net-SSLeay'   => 'Net_SSLeay',
+	'UNIVERSAL-require' => 'Univeral-require',
     }->{$dist} || $dist;
 
     my ($dir) = glob("/usr/ports/*/p5-$dist");
