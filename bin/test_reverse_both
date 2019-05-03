@@ -11,7 +11,6 @@ diff=""
 for d in $PORTSDIR_PATH; do
 	cd $d/$PKGPATH
 	$BINDIR/test_reverse
-	diff="$d/$PKGPATH/reverse_depends_results $diff"
 done
 
-echo diff -u $diff
+echo 'diff -u $( echo ${PWD} | sed -e 's,/mystuff[^/]*,,' )/reverse_depends_results reverse_depends_results'
