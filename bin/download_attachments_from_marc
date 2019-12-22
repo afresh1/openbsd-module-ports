@@ -18,6 +18,10 @@ for url in "$@"; do
 	[ "$url" = "${url#http}" ] && url="${base}/?m=$url"
 
 	_randsleep
+
+	TMP=$( mktemp downloaded-from-marc-TMP-XXXXXX )
+	trap 'rm -f $TMP; exit 1' 0 1 2 15
+
 	ftp -o- -i -M "$url" | grep '\&q=p' | while read line; do
 		href=${line##*href=\"}
 		href=${href%%\"*}
@@ -28,5 +32,13 @@ for url in "$@"; do
 		echo "$url" > "$name.txt"
 		ftp -o "$name" -i "${base}/$href"
 		echo "Downloaded $name from ${base}/$href"
+		echo $name >> $TMP
 	done
+
+	if [ ! -s "$TMP" ]; then
+		id=$( echo "$url" | sed -e 's/.*m=\([0-9]*\).*/\1/' )
+		ftp -o- "${base}/?q=mbox&m=$id" | perl -MMIME::QuotedPrint \
+		    -e 'print decode_qp join "", <>' > "$id.patch"
+		echo "Downloaded $id.patch"
+	fi
 done
