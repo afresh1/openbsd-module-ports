@@ -1,0 +1,82 @@
+#!/bin/sh
+
+TMP=$( mktemp "openbsd-module-ports-XXXXXXXXX" )
+trap "rm -rf '$TMP'" EXIT INT QUIT TERM
+MYSTUFF=/usr/ports/mystuff # -review-2019-02-22
+
+
+for d in extracted/*/; do
+	if [ ! -d "$d" ]; then
+		echo Unable to find any extracted messages >&2
+		exit 2
+	fi
+	
+	FOUND=""
+	for f in "$d"*; do
+		case "$f" in
+		    *.tar.gz | *.tgz ) 
+			src=$( mktemp -d "openbsd-module-ports-XXXXXXXXX" )
+			dst=""
+			tar -C "$src" -xvzf "$f"
+
+			category=$( sed -ne 's/^CATEGORIES[[:space:]]*=[[:space:]]*\([^[:space:]]*\).*$/\1/p' "$src"/*/Makefile 2>/dev/null | head -1 )
+			[ "$category" ] && dst="$category"
+
+			dst="$MYSTUFF/$dst"
+			mkdir -p "$dst"
+			cp -R "$src"/* "$dst"
+			rm -rf "$src"
+
+			FOUND=1
+			continue
+		    ;;
+		esac
+
+		cat /dev/null >$TMP
+
+		v=$( sed -ne 's|^RCS file: .*/ports/\(.*\),v|\1|p' "$f" )
+		for patched in $v; do
+			while [ "$patched" != . -a ! -e "/usr/ports/$patched/distinfo" ]; do
+echo $patched >&2
+				patched=$( dirname "$patched" )
+			done
+			echo $patched >> $TMP
+		done
+
+		if [ -s "$TMP" ]; then
+			FOUND=1
+		fi
+
+		for port in $( sort -u "$TMP" ); do
+			echo "$f: $port"
+			portpath="$MYSTUFF/$port" 
+
+			if [ -e "$portpath" ]; then
+				echo "Already have port $port"
+				exit 4
+			fi
+
+			if [ ! -e "/usr/ports/$port/distinfo" ]; then
+				echo "No distinfo in $port"
+				exit 5
+			fi
+
+			mkdir -p "$MYSTUFF"/$( dirname "$port" )
+			cp -r "/usr/ports/$port" "$MYSTUFF/$port"
+
+			patch=$( basename "$f" )
+
+			message=""
+			[ "$patch" = message.txt ] || message=$( dirname "$f" )/message.txt
+
+			cat "$message" "$f" > "$portpath/$patch"
+
+			( cd "$portpath" && patch -fEp0 -i "$patch" )
+		done
+	done
+
+	if [ -z "$FOUND" ]; then
+		echo "Unable to find anything in $d"
+		exit 3;
+	fi
+done
