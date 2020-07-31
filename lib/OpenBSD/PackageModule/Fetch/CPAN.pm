@@ -180,6 +180,7 @@ sub port_for_dist {
     # Map dist name on CPAN to port name
     # TODO: This should not be hardcoded and stored here.
     $dist = {
+	'Date-Manip'   => 'DateManip',
         MailTools      => 'Mail-Tools',
 	'Template-Toolkit' => 'Template',
         TimeDate       => 'Time-TimeDate',
