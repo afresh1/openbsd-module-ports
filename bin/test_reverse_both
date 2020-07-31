@@ -1,16 +1,29 @@
 #!/bin/sh
 BINDIR=$( readlink -f $(dirname $0) )
 
-PORTSDIR_PATH=$( make show=PORTSDIR_PATH |
-    awk -v RS=: '/./{ print length(), $0 }' |
-    sort -rn | cut -d ' ' -f 2- )
+PORTSDIR_PATH=
 
-PKGPATH=$( make show=BASE_PKGPATH )
+[ $# -eq 0 -a -d pkg ] && set -- .
+[ $# -eq 0 ]           && set -- */*/Makefile
 
-diff=""
-for d in $PORTSDIR_PATH; do
-	cd $d/$PKGPATH
-	$BINDIR/test_reverse
+for m in "$@"; do
+  PKGPATH=${m%Makefile}
+  PKGPATH=${PKGPATH%/}
+
+  if [ -z "$PORTSDIR_PATH" ]; then
+    PORTSDIR_PATH=$( cd $PKGPATH && make show=PORTSDIR_PATH |
+      awk -v RS=: '/./{ print length(), $0 }' |
+      sort -rn | cut -d ' ' -f 2- )
+  fi
+
+  [ "$PKGPATH" = "." ] && PKGPATH=$( make show=BASE_PKGPATH )
+  echo "Testing $PKGPATH"
+
+  for d in $PORTSDIR_PATH; do
+    [ -e "$d/$PKGPATH" ] || continue
+    cd $d/$PKGPATH
+    $BINDIR/test_reverse
+  done
 done
 
 echo 'diff -u $( echo ${PWD} | sed -e 's,/mystuff[^/]*,,' )/reverse_depends_results reverse_depends_results'

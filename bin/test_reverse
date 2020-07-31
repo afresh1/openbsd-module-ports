@@ -9,18 +9,18 @@ SELECT DISTINCT FULLPKGPATH FROM Depends
 EOL
 }
 
-
 CURDIR=$PWD
-cd /usr/ports/databases/sqlports && PACKAGE=compact make install && cd $OLDPWD
-DEPENDS=$( depends $( make show=BASE_PKGPATH ) | sed -e 's/,[^ ]+//g' )
+cd /usr/ports/databases/sqlports && make clean=depends && PACKAGE=compact make install && cd $OLDPWD
+DEPENDS=$( depends $( make show=BASE_PKGPATH ) | sed -e 's/,[^ ]+//g' | sort -u )
 
+export PLIST_REPOSITORY= 
 doas pkg_delete -X /var/db/pkg/*-firmware-*
-[ -n "$EXTRA_PACKAGES" ] && sudo pkg_add $EXTRA_PACKAGES
+[ -n "$EXTRA_PACKAGES" ] && doas pkg_add $EXTRA_PACKAGES
 
-# First get all the packages installed.
-rm -rf /usr/ports/pobj/*
-for p in $DEPENDS; do cd /usr/ports/$p && make PLIST_DB= prepare; done
-
-# Then actually get the results
-rm -rf /usr/ports/pobj/*
-for p in $DEPENDS; do cd /usr/ports/$p && make PLIST_DB= test; done 2>&1 | tee $CURDIR/reverse_depends_results
+rm -f $CURDIR/reverse_depends_results
+for p in $DEPENDS; do
+    cd /usr/ports/${p%,*}
+    make prepare
+    make test 2>&1 | tee -a $CURDIR/reverse_depends_results
+    make clean=depends
+done
