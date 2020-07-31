@@ -35,7 +35,7 @@ because it expects to be able to pkg_delete all packages to test that things wor
 
 * `cd /usr/ports/mystuff`
 
-* `openbsd-module-ports/bin/updated_depends`
+* `openbsd-module-ports/bin/updated_depends | sed -e 's/^/[ ] /' | tee -a TODO`
    * This script looks at all the ports that have been created or updates
    * checks their dependencies and sorts them
    * Ports that depend on others in the list come before them.
