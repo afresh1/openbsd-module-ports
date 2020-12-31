@@ -3,5 +3,7 @@
 find . -name 'pkg' | sed -e 's,^./,,;s,/*pkg$,,' | while read d; do
 	( [ -e $d/Makefile ] && cd $d && make all-dir-depends test-dir-depends )
 done | tsort -rq | while read p; do
-	test -e "$p" && echo $p
+	new=''
+	[ -e "$p/CVS" ] || new=" (NEW)"
+	test -e "$p" && echo "[ ] $p$new"
 done
