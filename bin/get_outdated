@@ -1,23 +1,64 @@
 #!/usr/bin/perl
-use strict;
+use v5.16;
 use warnings;
 
 # Uses http://portroach.openbsd.org to print a list of outdated ports.
 # Although useful, shows how you could extend things easily.
 # PERL5LIB=lib bin/pkg_module `bin/get_outdated | sed -e 's/: .*//'`
 
-my $maintainer = shift || 'andrew fresh <afresh1@openbsd.org>';
+my $MAINTAINER= shift || 'afresh1';
+my $BASE_URL = 'http://portroach.openbsd.org/json';
 
-my $outdated = FetchOutdated->new->outdated($maintainer);
-print "$_->{name}: $_->{ver} -> $_->{newver}\n" for @{ $outdated || [] };
+my $ua = HTTP::Tiny::JSON->new;
 
-package FetchOutdated;
-use parent 'OpenBSD::PackageModule::Fetch';
-sub base_url {'http://portroach.openbsd.org/json/'}
+my $res = $ua->get("$BASE_URL/totals.json");
+die "Unable to retrieve totals: $res->{status} $res->{reason}"
+    unless $res->{success};
 
-sub outdated { [ grep { $_->{newver} } @{ shift->get(@_) || [] } ] }
+my @results
+    = grep { $_->{maintainer} =~ /$MAINTAINER/ }
+           @{ $res->{content}->{results} };
 
-sub get {
-    my ( $self, $m ) = @_;
-    return $self->_get_json("$m.json");
+foreach my $r (@results) {
+	my $m = $ua->_uri_escape( $r->{maintainer} );
+	$m =~ s/\+/%20/g; # because that encoding isn't accepted
+
+	my $res = $ua->get("$BASE_URL/$m.json");
+	die "Unable to retrieve $r->{maintainer}: $res->{status} $res->{reason}"
+	    unless $res->{success};
+
+	printf "# %s %d/%d (%0.2f%%)\n",
+		@{ $r }{qw< maintainer withnewdistfile total percentage >};
+	print "$_->{name}: $_->{ver} -> $_->{newver}\n"
+	    for grep { $_->{newver} } @{ $res->{content} };
+}
+
+package HTTP::Tiny::JSON;
+use parent 'HTTP::Tiny';
+use v5.16;
+use warnings;
+
+use JSON::PP;
+
+BEGIN { our $VERSION = '0.001' } # for the user-agent
+
+sub new {
+	my $self = shift->SUPER::new(@_);
+	$self->{_json} = JSON::PP->new->utf8;
+	return $self;
+}
+
+sub request {
+	my ($self, @args) = @_;
+	my $res = $self->SUPER::request(@args);
+
+	if ( $res->{success}
+	    and $res->{headers}->{'content-type'}
+	        =~ m{^application/json} )
+	{
+		my $c = $res->{raw_content} = $res->{content};
+		$res->{content} = $self->{_json}->decode($c);
+	}
+
+	return $res;
 }
