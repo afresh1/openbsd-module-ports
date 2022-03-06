@@ -17,7 +17,7 @@ TODO
 
 
 WORKFLOW
-=======
+========
 
 The way I use this currently is to update my perl ports.
 This assumes you have a current system with `/usr/ports` checked out and
@@ -80,3 +80,9 @@ because it expects to be able to pkg_delete all packages to test that things wor
 
 * Once the port is approve and committed, you can then remove the directory.
    * and `cvs up` in `/usr/ports`
+
+
+References
+==========
+
+- [Dist::Zilla](https://dzil.org/index.html)
