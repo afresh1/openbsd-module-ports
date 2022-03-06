@@ -12,69 +12,73 @@ use Email::MIME;
 
 my @files;
 for (@ARGV) {
-	if ( -d $_ ) {
-		opendir my $dh, $_ or die "Unable to opendir $_: $!";
-		while (my $entry = readdir $dh) {
-			my $path = "$_/$entry";
-			push @ARGV, $path
-			    if -f $path
-			    or -d _ and $entry =~ /^(?:new|cur)$/;
-		}
-	}
-	elsif ( -f _ ) {
-		push @files, $_;
-	}
-	else {
-		die "Unknown argument: $_\n";
-	}
+    if ( -d $_ ) {
+        opendir my $dh, $_ or die "Unable to opendir $_: $!";
+        while (my $entry = readdir $dh) {
+            my $path = "$_/$entry";
+            push @ARGV, $path
+                if -f $path
+                or -d _ and $entry =~ /^(?:new|cur)$/;
+        }
+    }
+    elsif ( -f _ ) {
+        push @files, $_;
+    }
+    else {
+        die "Unknown argument: $_\n";
+    }
 }
 
 foreach my $mailfile (@files) {
-	say $mailfile;
-	my $message = do {
-		open my $fh, '<', $mailfile
-		    or die "Unable to open $mailfile: $!";
-		local $/;
-		readline($fh);
-	};
-	my $parsed = Email::MIME->new($message);
+    say $mailfile;
+    my $message = do {
+        open my $fh, '<', $mailfile
+            or die "Unable to open $mailfile: $!";
+        local $/;
+        readline($fh);
+        };
+    my $parsed = Email::MIME->new($message);
 
-	my $subject = $parsed->header_str("Subject") || "Unknown subject";
-	my $dir = $subject;
-	$dir =~ s/\W+/_/ag;
-	$dir =~ s/__+/_/g;
-	$dir =~ s/^_//;
-	$dir =~ s/_$//;
+    my $subject = $parsed->header_str("Subject") || "Unknown subject";
+    my $dir = $subject;
+    $dir =~ s/\W+/_/ag;
+    $dir =~ s/__+/_/g;
+    $dir =~ s/^_//;
+    $dir =~ s/_$//;
 
-	$dir = "extracted/$dir";
+    $dir = "extracted/$dir";
 
-	mkdir "extracted" unless -d "extracted";
-	mkdir $dir or die "Unable to mkdir $dir: $!" unless -d $dir;
+    mkdir "extracted" unless -d "extracted";
+    mkdir $dir or die "Unable to mkdir $dir: $!" unless -d $dir;
 
-	$parsed->walk_parts( sub {
-		my ($part) = @_;
-		return if $part->{ct}->{type}    eq 'multipart'
-		      and $part->{ct}->{subtype} eq 'mixed';
+    $parsed->walk_parts( sub {
+            my ($part) = @_;
+            return if $part->{ct}->{type}    eq 'multipart'
+                and $part->{ct}->{subtype} eq 'mixed';
 
-		my $filename = $part->filename;
-		my $body = '';
-		unless ($filename) {
-			$filename = "message.txt";
-			$body .= $_ for 
-				map { "$_->[0]: $_->[1]\n" }
-				grep { $_->[1] }
-				map { [ $_, $parsed->header_str($_) ] }
-				qw( Date From To Cc Subject Message-ID  );
-			$body .= "\n";
-		}
-		$body .= $part->body;
+            my $filename = $part->filename;
+            my $body = '';
+            unless ($filename) {
+                $filename = "message.txt";
+                $body .= $_ for
+                    map { "$_->[0]: $_->[1]\n" }
+                    grep { $_->[1] }
+                    map { [ $_, $parsed->header_str($_) ] }
+                    qw( Date From To Cc Subject Message-ID  );
+                $body .= "\n";
+            }
+            $body .= $part->body;
 
-		next unless $body;
+            next unless $body;
 
-		my $file = "$dir/$filename";
-		open my $fh, '>', $file or die "Unable to open $file: $!";
-		binmode $fh if $part->{ct}->{type} eq 'application';
+            my $file = "$dir/$filename";
+            open my $fh, '>', $file or die "Unable to open $file: $!";
+            binmode $fh if $part->{ct}->{type} eq 'application';
 
-		print $fh $body;
-	} );
+            print $fh $body;
+            } );
 }
+
+# -*- mode: perl -*-
+# vi: set ft=perl :
+

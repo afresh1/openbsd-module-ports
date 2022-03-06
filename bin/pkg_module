@@ -67,3 +67,7 @@ sub port_it {
     my $mp = OpenBSD::PackageModule::MakePort->new();    # TODO: new($di);
     $mp->make_port($di);
 }
+
+# -*- mode: perl -*-
+# vi: set ft=perl :
+

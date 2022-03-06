@@ -13,17 +13,17 @@ my @filenames;
 GetOptions(
     "filename=s" => \@filenames,
     "subject=s"  => \$subject
-) or die ("Error in command line argument\n");
+    ) or die ("Error in command line argument\n");
 
 # Allow --filename=foo.txt,bar.pdf
 @filenames = map { split /,/ } @filenames;
 
 my %content_types;
 if (@filenames) {
-	open my $fh, '-|', ( 'file', '-i', @filenames ) or die $!;
-        %content_types
-            = map { split /:\s*/, $_, 2 } map { chomp; $_ } readline($fh);
-	close $fh;
+    open my $fh, '-|', ( 'file', '-i', @filenames ) or die $!;
+    %content_types
+        = map { split /:\s*/, $_, 2 } map { chomp; $_ } readline($fh);
+    close $fh;
 }
 
 my $boundary = "=====" . ( int rand 999_999_999 ) . "=====";
@@ -41,21 +41,21 @@ $body
 EOL
 
 foreach my $filename (@filenames) {
-	open my $fh, '<', $filename or die "Unable to open $filename: $!";
-	my $binary = do { local $/ = undef; <$fh> };
-	close $fh;
+    open my $fh, '<', $filename or die "Unable to open $filename: $!";
+    my $binary = do { local $/ = undef; <$fh> };
+    close $fh;
 
-	# we want a special content-type for tar.gz files
-	# so apps know to open the whole thing.
-        my $content_type
-            = $filename =~ /\.tar\.gz$/i
-            ? 'application/x-tar-gz'
-            : $content_types{$filename};
+    # we want a special content-type for tar.gz files
+    # so apps know to open the whole thing.
+    my $content_type
+        = $filename =~ /\.tar\.gz$/i
+        ? 'application/x-tar-gz'
+        : $content_types{$filename};
 
-	$filename = basename($filename);
-	my $data = encode_base64($binary);
+    $filename = basename($filename);
+    my $data = encode_base64($binary);
 
-	$msg .= <<"EOL";
+    $msg .= <<"EOL";
 --$boundary
 Content-Type: $content_type; name="$filename"
 Content-Transfer-Encoding: base64
@@ -70,3 +70,7 @@ $msg .= "--$boundary--\n";
 open my $sendmail, '|-', '/usr/sbin/sendmail', @ARGV or die $!;
 print $sendmail $msg;
 close $sendmail;
+
+# -*- mode: perl -*-
+# vi: set ft=perl :
+

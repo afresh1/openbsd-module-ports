@@ -8,46 +8,50 @@ $ENV{CVSROOT} = 'anoncvs@openbsd:/cvs';
 
 my %additions;
 for my $port ( glob '*/*/' ) {
-	next unless -e "$port/Makefile";
-	say "Found $port";
+    next unless -e "$port/Makefile";
+    say "Found $port";
 
-	# These are currently the same, but could run it in .. eventually
-	my $root = dirname $port;
-	my $cat  = basename $root;
+    # These are currently the same, but could run it in .. eventually
+    my $root = dirname $port;
+    my $cat  = basename $root;
 
-	system( 'cvs', 'checkout', '-d', $root, "ports/$cat/Makefile" ) == 0
-	    or die "Unable to checkout $root: $!" unless -e "$root/Makefile";
+    system( 'cvs', 'checkout', '-d', $root, "ports/$cat/Makefile" ) == 0
+        or die "Unable to checkout $root: $!" unless -e "$root/Makefile";
 
-	push @{ $additions{$root} }, basename $port;
+    push @{ $additions{$root} }, basename $port;
 }
 
 foreach my $root (keys %additions) {
-	open my $fh, '+<', "$root/Makefile"
-	    or die "Unable to open $root/Makefile: $!";
+    open my $fh, '+<', "$root/Makefile"
+        or die "Unable to open $root/Makefile: $!";
 
-	my @add = sort @{ $additions{$root} };
+    my @add = sort @{ $additions{$root} };
 
-	my @contents;
-	my ($pre, $port, $post);
-	while ( readline $fh ) {
-		if (/^(\s*SUBDIR\s*\+=\s*)(.*?)(\s+)$/) {
-			($pre, $port, $post) = ($1, $2, $3);
+    my @contents;
+    my ($pre, $port, $post);
+    while ( readline $fh ) {
+        if (/^(\s*SUBDIR\s*\+=\s*)(.*?)(\s+)$/) {
+            ($pre, $port, $post) = ($1, $2, $3);
 
-			shift @add while @add and $add[0] eq $port;
+            shift @add while @add and $add[0] eq $port;
 
-			while ( @add and $add[0] lt $port ) {
-				say "Adding $add[0]";
-				push @contents,
-				     join '', $pre, shift(@add),  $post;
-			}
-		}
-		elsif ($pre) {
-			push @contents, map { join '', $pre, $_, $post } @add;
-		}
+            while ( @add and $add[0] lt $port ) {
+                say "Adding $add[0]";
+                push @contents,
+                    join '', $pre, shift(@add),  $post;
+            }
+        }
+        elsif ($pre) {
+            push @contents, map { join '', $pre, $_, $post } @add;
+        }
 
-		push @contents, $_;
-	}
+        push @contents, $_;
+    }
 
-	$fh->seek(0, 0);
-	print $fh @contents;
+    $fh->seek(0, 0);
+    print $fh @contents;
 }
+
+# -*- mode: perl -*-
+# vi: set ft=perl :
+

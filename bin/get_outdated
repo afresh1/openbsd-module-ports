@@ -17,20 +17,20 @@ die "Unable to retrieve totals: $res->{status} $res->{reason}"
 
 my @results
     = grep { $_->{maintainer} =~ /$MAINTAINER/ }
-           @{ $res->{content}->{results} };
+    @{ $res->{content}->{results} };
 
 foreach my $r (@results) {
-	my $m = $ua->_uri_escape( $r->{maintainer} );
-	$m =~ s/\+/%20/g; # because that encoding isn't accepted
+    my $m = $ua->_uri_escape( $r->{maintainer} );
+    $m =~ s/\+/%20/g; # because that encoding isn't accepted
 
-	my $res = $ua->get("$BASE_URL/$m.json");
-	die "Unable to retrieve $r->{maintainer}: $res->{status} $res->{reason}"
-	    unless $res->{success};
+    my $res = $ua->get("$BASE_URL/$m.json");
+    die "Unable to retrieve $r->{maintainer}: $res->{status} $res->{reason}"
+        unless $res->{success};
 
-	printf "# %s %d/%d (%0.2f%%)\n",
-		@{ $r }{qw< maintainer withnewdistfile total percentage >};
-	print "$_->{name}: $_->{ver} -> $_->{newver}\n"
-	    for grep { $_->{newver} } @{ $res->{content} };
+    printf "# %s %d/%d (%0.2f%%)\n",
+        @{ $r }{qw< maintainer withnewdistfile total percentage >};
+    print "$_->{name}: $_->{ver} -> $_->{newver}\n"
+        for grep { $_->{newver} } @{ $res->{content} };
 }
 
 package HTTP::Tiny::JSON;
@@ -43,22 +43,26 @@ use JSON::PP;
 BEGIN { our $VERSION = '0.001' } # for the user-agent
 
 sub new {
-	my $self = shift->SUPER::new(@_);
-	$self->{_json} = JSON::PP->new->utf8;
-	return $self;
+    my $self = shift->SUPER::new(@_);
+    $self->{_json} = JSON::PP->new->utf8;
+    return $self;
 }
 
 sub request {
-	my ($self, @args) = @_;
-	my $res = $self->SUPER::request(@args);
+    my ($self, @args) = @_;
+    my $res = $self->SUPER::request(@args);
 
-	if ( $res->{success}
-	    and $res->{headers}->{'content-type'}
-	        =~ m{^application/json} )
-	{
-		my $c = $res->{raw_content} = $res->{content};
-		$res->{content} = $self->{_json}->decode($c);
-	}
+    if ( $res->{success}
+        and $res->{headers}->{'content-type'}
+        =~ m{^application/json} )
+    {
+        my $c = $res->{raw_content} = $res->{content};
+        $res->{content} = $self->{_json}->decode($c);
+    }
 
-	return $res;
+    return $res;
 }
+
+# -*- mode: perl -*-
+# vi: set ft=perl :
+
