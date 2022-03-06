@@ -81,8 +81,3 @@ because it expects to be able to pkg_delete all packages to test that things wor
 * Once the port is approve and committed, you can then remove the directory.
    * and `cvs up` in `/usr/ports`
 
-
-References
-==========
-
-- [Dist::Zilla](https://dzil.org/index.html)
