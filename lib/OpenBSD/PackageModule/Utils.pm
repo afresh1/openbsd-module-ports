@@ -31,7 +31,7 @@ our @EXPORT_OK = qw(
     dist_is_up_to_date
     port_value
     make_in_port
-);
+    );
 
 sub port_dir { $ENV{PORTSDIR} || '/usr/ports' }
 sub base_dir { port_dir() . '/mystuff' }

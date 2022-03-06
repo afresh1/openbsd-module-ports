@@ -82,7 +82,7 @@ sub format_dist {
         descr   => $self->descr_for_dist($di),
 
         port => $port,
-    );
+        );
 
     # Picked up from elsewhere
     $formatted{MODULES} =~ s/ node//     if $formatted{MODULES};
@@ -93,13 +93,15 @@ sub format_dist {
 
 sub _format_depends {
     my ($self, $di) = @_;
+
     #use Data::Dumper 'Dumper'; warn Dumper $di; exit;
 
     my %depend_map = (
         BUILD_DEPENDS => [ 'devDependencies' ],
         RUN_DEPENDS   => ['dependencies'],
+
         #TEST_DEPENDS  => ['test'],
-    );
+        );
 
     my %depends;
     foreach my $type ( sort keys %depend_map ) {
@@ -172,7 +174,7 @@ sub _format_depends {
                     port    => $port,
                     dist    => $dist,
                     version => $version,
-                };
+                    };
             }
         }
     }
@@ -187,7 +189,7 @@ sub port_for_dist {
     # Map dist name on NPM to port name
     # TODO: This should not be hardcoded and stored here.
     $dist = {
-    }->{$dist} || $dist;
+        }->{$dist} || $dist;
 
     my ($dir) = glob("/usr/ports/*/node-$dist");
     $dir = "NPM/node-$dist" unless $dir && $dir !~ /\*/;

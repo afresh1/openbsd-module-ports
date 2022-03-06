@@ -65,14 +65,14 @@ sub format_dist {
             MODPY_SETUPTOOLS => 'Yes',
 
             $self->_format_depends($di),
-        },
+            },
 
         distname => $distname,
         license  => $di->{info}->{license},
         descr    => $self->descr_for_dist($di),
 
         port => $port,
-    );
+        );
 
     return $self->SUPER::format_dist( \%formatted );
 }
@@ -107,7 +107,7 @@ def _setup(**kwargs):
 distutils.core.setup = _setup
 import setup
 EOL
-    
+
     close $chld_in;
 
     my (@requires) = <$chld_out>;
@@ -147,8 +147,9 @@ sub _format_depends {
         BUILD_DEPENDS => ['setup_requires'],
         RUN_DEPENDS   => ['install_requires', 'requires'],
         TEST_DEPENDS  => ['tests_require'],
+
         # ['extras_require'] ???
-    );
+        );
 
     my %depends;
     foreach my $type ( sort keys %depend_map ) {
@@ -166,7 +167,7 @@ sub _format_depends {
                     port    => $port,
                     dist    => $dist,
                     version => $r{$dist},
-                };
+                    };
             }
         }
     }

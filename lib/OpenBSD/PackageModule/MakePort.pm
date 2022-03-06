@@ -27,7 +27,7 @@ use OpenBSD::PackageModule::Utils qw(
     base_dir
     make_in_port
     makefile_template
-);
+    );
 
 sub _cp {
     my (@args) = @_;
@@ -98,14 +98,14 @@ sub parse_makefile {
                 value     => $value,
                 tabs      => $tabs,
                 commented => $comment ? 1 : 0,
-            };
+                };
             $vars{$key} = $value;
         }
         else {
             push @makefile, $line;
         }
         $line = '';
-    };
+        };
 
     open my $fh, '<', $path or croak("Couldn't open $path: $!");
     $parse->($_) while <$fh>;
@@ -114,7 +114,7 @@ sub parse_makefile {
     return {
         makefile => \@makefile,
         vars     => \%vars,
-    }
+        }
 }
 
 sub make_makefile {
@@ -133,15 +133,14 @@ sub make_makefile {
         EPOCH
         MAINTAINER
         SHARED_ONLY
-    );
+        );
     my @makefile = @{ $old_port->{makefile} || [] };
     %copy_values = () unless @makefile;
     @makefile = (
         '# $OpenBSD$' . "\n",
         grep { $_ !~ /^\#/x }
             @{ $self->parse_makefile($self->makefile_template)->{makefile} }
-    ) unless @makefile;
-
+        ) unless @makefile;
 
     my $depends_value = sub {
         my ($print_key, $value) = @_;
@@ -159,7 +158,7 @@ sub make_makefile {
         }
 
         return join " \\\n$sub_tabs", @new;
-    };
+        };
 
     open my $fh, '>', 'Makefile' or die "Couldn't open Makefile: $!";
 

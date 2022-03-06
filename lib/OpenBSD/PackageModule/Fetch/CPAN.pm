@@ -82,7 +82,7 @@ sub format_dist {
         # TODO: It could become an EXTRACT_SUFX
     }
     elsif ( $distname =~ s/(\.tar.[^.]+)$// or $distname =~ s/(\.[^.]+)$// ) {
-	$suffix = $1;
+        $suffix = $1;
     }
 
     my $license = join ' ',
@@ -100,7 +100,7 @@ sub format_dist {
             PERMIT_PACKAGE_CDROM => 'Yes',    # TODO: decide based on license
 
             $self->_format_depends($di),
-        },
+            },
 
         distname => $distname,
         license  => $license,
@@ -109,7 +109,7 @@ sub format_dist {
         #CONFIGURE_STYLE=>modbuild
 
         port => $port,
-    );
+        );
 
     $formatted{makefile}{EXTRACT_SUFX} = $suffix if $suffix;
 
@@ -133,7 +133,7 @@ sub _format_depends {
         BUILD_DEPENDS => [ 'configure', 'build' ],
         RUN_DEPENDS   => ['runtime'],
         TEST_DEPENDS  => ['test'],
-    );
+        );
 
     my %depends;
     foreach my $type ( sort keys %depend_map ) {
@@ -156,7 +156,8 @@ sub _format_depends {
                     my %details = (
                         port    => $port,
                         dist    => $dist,
-                    );
+                        );
+
                     # assume >=
                     $details{version} = '>=' . $r{$module} if $r{$module};
                     $depends{$t}{$port} = \%details;
@@ -180,16 +181,16 @@ sub port_for_dist {
     # Map dist name on CPAN to port name
     # TODO: This should not be hardcoded and stored here.
     $dist = {
-	'Date-Manip'   => 'DateManip',
+        'Date-Manip'   => 'DateManip',
         MailTools      => 'Mail-Tools',
-	'Template-Toolkit' => 'Template',
+        'Template-Toolkit' => 'Template',
         TimeDate       => 'Time-TimeDate',
         'YAML-LibYAML' => 'YAML-XS',
         Mojolicious    => 'Mojo',
         'libwww-perl'  => 'libwww',
         'Net-SSLeay'   => 'Net_SSLeay',
-	'UNIVERSAL-require' => 'Univeral-require',
-    }->{$dist} || $dist;
+        'UNIVERSAL-require' => 'Univeral-require',
+        }->{$dist} || $dist;
 
     my ($dir) = glob("/usr/ports/*/p5-$dist");
     $dir = "CPAN/p5-$dist" unless $dir && $dir !~ /\*/;
