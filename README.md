@@ -1,20 +1,8 @@
 openbsd-module-ports
 ====================
 
-A framework to generate OpenBSD ports for things like Ruby Gems and Perl modules
-
-This is a very rough work in progress still.
-There are many things it doesn't do yet but for me, it is better than nothing.
-
-TODO
-====
-
-* `pkg/DESCR`
-* `make makesum`
-* `make plist`
-* `OpenBSD::PackageModule::Fetch::Gem`
-* `OpenBSD::PackageModule::Fetch::PyPy`
-
+A set of helpers for help in creating and updating OpenBSD ports
+for things supported by portgen(1).
 
 WORKFLOW
 =======
@@ -55,7 +43,7 @@ because it expects to be able to pkg_delete all packages to test that things wor
 * At this point the port should ideally be the way you want to share it.
    * Using tools like `/usr/ports/infrastructure/bin/portcheck`
 
-* `pkg_delete /var/db/pkg/*`
+* `pkg_delete -XI`
    * to verify that all dependencies are listed.
 
 * I then run `make test` and make sure that all tests run and pass
