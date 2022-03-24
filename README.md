@@ -26,10 +26,10 @@ up to date and have created `/usr/ports/mystuff`.
 It assumes you are doing this on a dedicated machine (or possibly in a chroot)
 because it expects to be able to pkg_delete all packages to test that things work with only specified dependencies.
 
-* `perl -Ilib bin/get_outdated`
+* `bin/get_outdated`
    * You will need to update the script with your portroach `MAINTAINER` address
 
-* `perl -Ilib bin/pkg_module $( perl -Ilib bin/get_outdated | sed -e 's/:.*//' )`
+* `bin/get_outdated  | sed -n 's/: .*//; s/^p5-/p5 /p' | xargs -n 2 /usr/ports/infrastructure/bin/portgen`
    * This creates updated ports in `/usr/ports/mystuff`
    * I often create `/usr/ports/mystuff-$( date +%Y-%d-%m)` and symlink that to `mystuff`
 

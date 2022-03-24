@@ -4,7 +4,8 @@ use warnings;
 
 # Uses http://portroach.openbsd.org to print a list of outdated ports.
 # Although useful, shows how you could extend things easily.
-# PERL5LIB=lib bin/pkg_module `bin/get_outdated | sed -e 's/: .*//'`
+# bin/get_outdated  | sed -n 's/: .*//; s/^p5-/p5 /p' |
+#     xargs -n 2 /usr/ports/infrastructure/bin/portgen
 
 my $MAINTAINER= shift || 'afresh1';
 my $BASE_URL = 'http://portroach.openbsd.org/json';
