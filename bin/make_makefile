@@ -1,0 +1,8 @@
+cat <<'EOL' >Makefile
+PKGPATH =
+.include <bsd.port.subdir.mk>
+EOL
+
+for d in */; do
+	echo '.include <bsd.port.subdir.mk>' > $d/Makefile
+done
